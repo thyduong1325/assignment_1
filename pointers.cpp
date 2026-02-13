@@ -6,6 +6,7 @@
 // compile: g++ -std=c++14 -o pointers pointers.cpp
 #include <iostream>
 #include <string>
+#include <cctype>
 
 typedef struct Student {
     int id;
@@ -18,6 +19,7 @@ typedef struct Student {
 int promptInt(std::string message, int min, int max);
 double promptDouble(std::string message, double min, double max);
 void calculateStudentAverage(void *object, double *avg);
+void promptName(std::string message, char* dest, int maxLen);
 
 int main(int argc, char **argv)
 {
@@ -27,13 +29,11 @@ int main(int argc, char **argv)
     // Prompt and validate student ID number
     student.id = promptInt("Please enter the student's id number: ", 1, 1000000000);
 
-    std::cout << "Please enter the student's first name: ";
     student.f_name = new char[128];  // Allocate memory for C-string
-    std::cin.getline(student.f_name, 128);
+    promptName("Please enter the student's first name: ", student.f_name, 128); // Get first name with validation
 
-    std::cout << "Please enter the student's last name: ";
     student.l_name = new char[128];  // Allocate memory for C-string
-    std::cin.getline(student.l_name, 128);
+    promptName("Please enter the student's last name: ", student.l_name, 128); // Get last name with validation
 
     // Get number of assignments with validation
     student.n_assignments = promptInt("Please enter how many assignments were graded: ", 1, 134217728);
@@ -118,5 +118,45 @@ void calculateStudentAverage(void *object, double *avg)
     *avg = total / num_assignment; // Compute final average
     
     // Print formatted output to match example exactly
-    printf("Average grade: %.1f\n", *avg); 
+    printf("  Average grade: %.1f\n", *avg); 
+}
+
+/*
+   Validates string input to ensure it contains only alphabetic characters
+   message: text to output as the prompt
+   dest: the char array where the name will be stored
+   maxLen: the maximum number of characters to read
+*/
+void promptName(std::string message, char* dest, int maxLen) {
+    while (true) {
+        std::cout << message;
+        std::cin.getline(dest, maxLen);
+
+        bool isValid = true;
+        // Check if input is empty
+        if (dest[0] == '\0') {
+            isValid = false;
+        }
+
+        // Iterate through the C-string to check for numbers or symbols
+        for (int i = 0; dest[i] != '\0'; i++) {
+            if (!isalpha(dest[i])) { // isalpha returns false for numbers/symbols
+                isValid = true; 
+                if (isdigit(dest[i]) || ispunct(dest[i])) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!isValid || std::cin.fail()) {
+            std::cout << "Sorry, I cannot understand your answer" << std::endl;
+            std::cin.clear();
+            if (std::cin.fail()) {
+                std::cin.ignore(10000, '\n'); 
+            }
+        } else {
+            break; // Input is clean
+        }
+    }
 }
